@@ -20,7 +20,7 @@ module Dropbox # :nodoc:
     :web => WEB_SERVER
   }
 
-  API_VERSION = 1
+  API_VERSION = 2
   SDK_VERSION = "1.6.5"
 
   TRUSTED_CERT_FILE = File.join(File.dirname(__FILE__), 'trusted-certs.crt')
@@ -160,6 +160,7 @@ class DropboxSessionBase # :nodoc:
   def build_url(path, server)
     port = 443
     host = Dropbox::SERVERS[server]
+    # need to change the version here:
     full_path = "/#{Dropbox::API_VERSION}#{path}"
     return URI::HTTPS.build({:host => host, :path => full_path})
   end
@@ -443,7 +444,8 @@ class DropboxOAuth2FlowBase  # :nodoc:
     }
 
     host = Dropbox::WEB_SERVER
-    path = "/#{Dropbox::API_VERSION}/oauth2/authorize"
+    # Path needs to be changed here to '/oauth2/authorize' - No version number - MAC
+    path = "/oauth2/authorize"
 
     target = URI::Generic.new("https", nil, host, nil, nil, path, nil, nil, nil)
     target.query = Dropbox::make_query_string(params)
@@ -458,7 +460,8 @@ class DropboxOAuth2FlowBase  # :nodoc:
       raise ArgumentError, "code must be a String"
     end
 
-    uri = URI.parse("https://#{Dropbox::API_SERVER}/1/oauth2/token")
+    # TODO: Path needs to be changed here to '/oauth2/token' - No version number - MAC
+    uri = URI.parse("https://#{Dropbox::API_SERVER}/oauth2/token")
     request = Net::HTTP::Post.new(uri.request_uri)
     client_credentials = @consumer_key + ':' + @consumer_secret
     request.add_field('Authorization', 'Basic ' + Base64.encode64(client_credentials).chomp("\n"))
@@ -762,8 +765,10 @@ class DropboxClient
 
   # Disables the access token that this +DropboxClient+ is using.  If this call
   # succeeds, further API calls using this object will fail.
+
+  # TODO: UPDATE this to /2/auth/token/revoke - MAC
   def disable_access_token
-    @session.do_post "/disable_access_token"
+    @session.do_post "/#{Dropbox::API_VERSION}/auth/token/revoke"
     nil
   end
 
@@ -775,7 +780,8 @@ class DropboxClient
       raise ArgumentError.new("This call requires a DropboxClient that is configured with " \
                               "an OAuth 1 access token.")
     end
-    response = @session.do_post "/oauth2/token_from_oauth1"
+    #  TODO: Add in API Version here - /2/auth/token/from_oauth1 - MAC
+    response = @session.do_post "/#{Dropbox::API_VERSION}/auth/token/from_oauth1"
     Dropbox::parse_response(response)['access_token']
   end
 
@@ -1453,7 +1459,7 @@ class DropboxClient
   def save_url(to_path, url)
     params = { 'url' => url }
 
-    response = @session.do_post "/save_url/auto#{format_path(to_path, true)}", params
+    response = @session.do_post "/save_url#{format_path(to_path, true)}", params
     Dropbox::parse_response(response)
   end
 
@@ -1468,7 +1474,7 @@ class DropboxClient
   # Check https://www.dropbox.com/developers/core/docs#save-url for more info.
   #     {"status": "FAILED", "error": "Job timed out"}
   def save_url_job(job_id)
-    response = @session.do_get "/save_url_job/#{job_id}"
+    response = @session.do_get "/save_url/check_job_status/#{job_id}"
     Dropbox::parse_response(response)
   end
 
