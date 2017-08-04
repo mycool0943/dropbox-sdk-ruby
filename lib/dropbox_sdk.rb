@@ -442,11 +442,11 @@ class DropboxOAuth2FlowBase  # :nodoc:
       "state" => state,
       "locale" => @locale,
     }
-
+    # www.dropbox.com
     host = Dropbox::WEB_SERVER
     # Path needs to be changed here to '/oauth2/authorize' - No version number - MAC
     path = "/oauth2/authorize"
-
+    # www.dropbox.com/oauth2/authorize
     target = URI::Generic.new("https", nil, host, nil, nil, path, nil, nil, nil)
     target.query = Dropbox::make_query_string(params)
 
@@ -1458,8 +1458,9 @@ class DropboxClient
   #     {"status": "PENDING", "job": "PEiuxsfaISEAAAAAAADwzg"}
   def save_url(to_path, url)
     params = { 'url' => url }
+    # Supposed to be a post - and it is.
 
-    response = @session.do_post "/#{Dropbox::API_VERSION}/files/save_url#{format_path(to_path, true)}", params
+    response = @session.do_post "/files/save_url#{format_path(to_path, true)}", params
     # TODO: Check the response parser for new v2 responses.
     Dropbox::parse_response(response)
   end
@@ -1476,7 +1477,7 @@ class DropboxClient
   #     {"status": "FAILED", "error": "Job timed out"}
   # 2/files/save_url/check_job_status - NEW Api
   def save_url_job(job_id)
-    response = @session.do_get "/#{Dropbox::API_VERSION}/files/save_url/check_job_status/#{job_id}"
+    response = @session.do_get "/files/save_url/check_job_status/#{job_id}"
     Dropbox::parse_response(response)
   end
 
