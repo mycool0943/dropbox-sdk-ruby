@@ -1459,7 +1459,8 @@ class DropboxClient
   def save_url(to_path, url)
     params = { 'url' => url }
 
-    response = @session.do_post "/save_url#{format_path(to_path, true)}", params
+    response = @session.do_post "/#{Dropbox::API_VERSION}/files/save_url#{format_path(to_path, true)}", params
+    # TODO: Check the response parser for new v2 responses.
     Dropbox::parse_response(response)
   end
 
@@ -1473,8 +1474,9 @@ class DropboxClient
   # PENDING, DOWNLOADING, COMPLETE, FAILED
   # Check https://www.dropbox.com/developers/core/docs#save-url for more info.
   #     {"status": "FAILED", "error": "Job timed out"}
+  # 2/files/save_url/check_job_status - NEW Api
   def save_url_job(job_id)
-    response = @session.do_get "/save_url/check_job_status/#{job_id}"
+    response = @session.do_get "/#{Dropbox::API_VERSION}/files/save_url/check_job_status/#{job_id}"
     Dropbox::parse_response(response)
   end
 
